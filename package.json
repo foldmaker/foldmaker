@@ -1,6 +1,6 @@
 {
-  "name": "is-sorted",
-  "version": "1.0.5",
+  "name": "foldmaker",
+  "version": "1.0.0",
   "description": "A small parser generator toolkit that can be used to build parsers, transpilers, formatters.",
   "main": "index.js",
   "scripts": {
@@ -20,9 +20,9 @@
     "transpiler"
   ],
   "dependencies": {},
-"devDependencies": {
-  "mocha": ""
-},
+  "devDependencies": {
+    "mocha": ""
+  },
   "author": "Onur Kerimov",
   "license": "MIT"
 }
