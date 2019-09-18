@@ -15,10 +15,11 @@ import Foldmaker from 'foldmaker'
 ```
 ## Demos
 
-- [@foldmaker/infinite-loop-protection](http://foldmaker.js.org/infinite-loop-protection)
-- [@foldmaker/css-nested](http://foldmaker.js.org/css-nested)
-- [@foldmaker/css-indent](http://foldmaker.js.org/css-indent)
-- [@foldmaker/indent-to-tree](http://foldmaker.js.org/indent-to-tree)
+**[@foldmaker/infinite-loop-protection](https://github.com/foldmaker/infinite-loop-protection)**: Infinite loop protection transpiler for JavaScript
+**[@foldmaker/shallow-ast](https://github.com/foldmaker/shallow-ast)**: A fast and 'shallow' AST generator for JavaScript
+**[@foldmaker/css-nested](https://github.com/foldmaker/css-nested)**: Unwraps nested rules (like SCSS)
+**[@foldmaker/css-indent](https://github.com/foldmaker/css-indent)**: Unwraps nested rules (like SASS)
+**[@foldmaker/indent-to-tree](https://github.com/foldmaker/indent-to-tree)
 
 ## Examples
 ## API
