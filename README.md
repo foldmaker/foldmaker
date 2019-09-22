@@ -1,5 +1,5 @@
 # ![](logo.png)
-Foldmaker is a lightweight parser generator (120 lines uncommented). It can be used to build tokenizers, parsers, transpilers, linters, formatters, syntax highlighters and all other stuff. It is designed to be as minimal as possible. The API is designed to be user-friendly. You can implement SCSS-like preprocessors [only in ~70 lines](https://github.com/foldmaker/css-nested). 
+Foldmaker is a lightweight parser generator (120 lines uncommented). It can be used to build tokenizers, parsers, transpilers, linters, formatters, syntax highlighters and all other stuff. It was designed to be as minimal as possible. The API was designed to be user-friendly. You can implement SCSS-like preprocessors [only in ~70 lines](https://github.com/foldmaker/css-nested). 
 
 I should warn you that Foldmaker is **opinionated!** When implementing a tokenizer (lexer) or a [scanner-less parser](https://en.wikipedia.org/wiki/Scannerless_parsing), Foldmaker can be used as any other parser, and therefore can be considered as unopinionated. However, in most complex cases (where you will have to use Foldmaker's `parse()` method), you will have to understand and apply the [following specifications](#tokenmapping-foldmaker-is-opinionated).
 
@@ -17,22 +17,43 @@ import Foldmaker from 'foldmaker'
 ```
 
 ## TokenMapping (Foldmaker is Opinionated!)
-Foldmaker is based on an innovative technique, that I would like to call "TokenMapping". Real power of Foldmaker comes from this technique. I don't believe I'm the first person to propose this technique, however I couldn't find it anywhere, so if you know its previous uses, please inform me.
+Foldmaker is based on a technique, that I would like to call "TokenMapping". Real power of Foldmaker comes from this technique. I don't believe I'm the first person to propose this technique, however I couldn't find it anywhere, so if you know its previous uses, please inform me.
 
 TokenMapping is basically a specification for the structure of the Foldmaker object. A Foldmaker object has two main properties: 
 **`array: Array`** and **`string: String`**. Take a look at this simple, valid Foldmaker object:
+
 ```js
 {
-  array: ["console.log", "(", "foo ", "=== ", "100", ";", ")" ],
-  string: "i(ion;)",
+  array: ["if", "(", "foo ", "=== ", "1", ") ", "{ print('ONE') }" ],
+  string: "k(ion)e",
 }
 ```
 Observe that both `array`'s and `string`'s length is 7 and they map to each other.
 ```js
-"console.log",   "(",   "foo ",   "=== ",   "100",   ";",   ")"
-      i           (       i         o         n       ;      ) 
+   "if",   "(",   "foo ",   "=== ",   "100",   ")",   "{ print('ONE') }",  
+    k       (       i         o         n       )            b
 ```
-This is simply it. A Foldmaker object is valid if `fm.array.length === fm.string.length` is true, where `fm` is the Foldmaker object. Now, for a Foldmaker object, 
+This is simply it. A Foldmaker object is valid if `fm.array.length === fm.string.length` is true, where `fm` is the Foldmaker object. Now, how does this exactly help? First, I should mention that, in this example, "k" stands for keyword, "i" stands for identifier, "o" for operator, "n" for number, "b" for block, and the rest stands for the same characters as themselves (parantheses). 
+
+Now, see the following RegExp that matches expressions. (non-zero length clusters of identifiers, operators and numbers)
+```js
+/[ion]+/
+```
+Imagine that what we apply to the string, we also apply to the array.
+With this structure that maps the array to the string, we can simply reduce the Foldmaker object to this state:
+```js
+   "if",   "(",   "foo === 100",   ")",   "{ print('ONE') }",  
+    k       (           e           )            b
+```
+Where "e" stands for expression.
+
+
+
+
+
+
+
+Now, for a Foldmaker object, 
 
 - When using tokenizer, each token type must be a **string**, and this string's **length must be exactly 1**.
 
