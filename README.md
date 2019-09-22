@@ -16,6 +16,13 @@ Importing Foldmaker by the default export is enough:
 import Foldmaker from 'foldmaker'
 ```
 
+## Demos
+- **[infinite-loop-protection](https://github.com/foldmaker/infinite-loop-protection)**: A JavaScript transpiler that modifies your loops with a break condition
+- **[shallow-ast](https://github.com/foldmaker/shallow-ast)**: A fast and 'shallow' AST generator for JavaScript
+- **[css-nested](https://github.com/foldmaker/css-nested)**: Unwraps nested rules (like SCSS)
+- **[css-indent](https://github.com/foldmaker/css-indent)**: Unwraps nested rules (like SASS)
+- **[indent-to-tree](https://github.com/foldmaker/indent-to-tree)**: Converts indentation-based input into a tree
+
 ## TokenMapping (Foldmaker is Opinionated!)
 Foldmaker is based on a technique, that I would like to call "TokenMapping". Real power of Foldmaker comes from this technique. I don't believe I'm the first person to propose this technique, however I couldn't find it anywhere, so if you know its previous uses, please inform me.
 
@@ -35,12 +42,11 @@ Observe that both `array`'s and `string`'s length is 7 and they map to each othe
 ```
 This is simply it. A Foldmaker object is valid if `fm.array.length === fm.string.length` is true, where `fm` is the Foldmaker object. Now, how does this exactly help? First, I should mention that, in this example, "k" stands for keyword, "i" stands for identifier, "o" for operator, "n" for number, "b" for block, and the rest stands for the same characters as themselves (parantheses). 
 
-Now, see the following RegExp that matches expressions. (non-zero length clusters of identifiers, operators and numbers)
+Now, see the following RegExp that matches expressions (non-zero length clusters of identifiers, operators and numbers). I call this type of RegExps as "meta-expression" or "MetaExp"
 ```js
 /[ion]+/
 ```
-Imagine that what we apply to the string, we also apply to the array.
-With this structure that maps the array to the string, we can simply reduce the Foldmaker object to this state:
+With this structure that maps the array to the string, we can simply execute a RegExp search on `fm.string`.
 ```js
    "if",   "(",   "foo === 100",   ")",   "{ print('ONE') }",  
     k       (           e           )            b
@@ -69,16 +75,6 @@ Unlike most parser generators, other than the tokenization part, it also uses re
 
 
 Foldmaker consists of `Foldmaker` class and a few helpers: `Foldmaker.tokenize()`, `Foldmaker.flatten()`, `Foldmaker.traverse()`, and `Foldmaker.traverseObjects()`. These helpers are the ones that are required for common use cases. Foldmaker class
-
-tokenize()
-
-## Demos
-
-- **[infinite-loop-protection](https://github.com/foldmaker/infinite-loop-protection)**: A JavaScript transpiler that modifies your loops with a break condition
-- **[shallow-ast](https://github.com/foldmaker/shallow-ast)**: A fast and 'shallow' AST generator for JavaScript
-- **[css-nested](https://github.com/foldmaker/css-nested)**: Unwraps nested rules (like SCSS)
-- **[css-indent](https://github.com/foldmaker/css-indent)**: Unwraps nested rules (like SASS)
-- **[indent-to-tree](https://github.com/foldmaker/indent-to-tree)**: Converts indentation-based input into a tree
 
 
 ## Examples
