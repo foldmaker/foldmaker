@@ -42,37 +42,19 @@ Observe that both `array`'s and `string`'s length is 7 and they map to each othe
 ```
 This is simply it. A Foldmaker object is valid if `fm.array.length === fm.string.length` is true, where `fm` is the Foldmaker object. Now, how does this exactly help? First, I should mention that, in this example, "k" stands for keyword, "i" stands for identifier, "o" for operator, "n" for number, "b" for block, and the rest stands for the same characters as themselves (parantheses). 
 
-Now, see the following RegExp that matches expressions (non-zero length clusters of identifiers, operators and numbers). I call this type of RegExps as "meta-expression" or "MetaExp"
+Now, see the following RegExp that matches expressions (non-zero length clusters of identifiers, operators and numbers). Let's call this type of RegExps as "meta-expression" or "MetaExp"
 ```js
 /[ion]+/
 ```
-With this structure that maps the array to the string, we can simply execute a RegExp search on `fm.string`.
-```js
-   "if",   "(",   "foo === 100",   ")",   "{ print('ONE') }",  
-    k       (           e           )            b
-```
-Where "e" stands for expression.
-
-
-
-
-
-
-
-Now, for a Foldmaker object, 
+...
+# This Section Is Incomplete
 
 - When using tokenizer, each token type must be a **string**, and this string's **length must be exactly 1**.
 
-
-Unlike most parser generators, other than the tokenization part, it also uses regular expressions in the parsing part (more on this later). This makes Foldmaker an opinionated parser. This brings a lot of advantages: 
+ (more on this later). This makes Foldmaker an opinionated parser. This brings a lot of advantages: 
 - Since searching with regular expressions is highly optimized, the resulting parsers can be more performant.
 
-
-
-
-
  For instance, `Foldmaker.tokenize()`, which is the lexer function, does not return the line and row numbers of the token. However, if you want, you can easily implement it by providing a callback function.
-
 
 Foldmaker consists of `Foldmaker` class and a few helpers: `Foldmaker.tokenize()`, `Foldmaker.flatten()`, `Foldmaker.traverse()`, and `Foldmaker.traverseObjects()`. These helpers are the ones that are required for common use cases. Foldmaker class
 
