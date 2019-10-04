@@ -23,7 +23,7 @@ import Foldmaker from 'foldmaker'
 - **[css-indent](https://github.com/foldmaker/css-indent)**: Unwraps nested rules (like SASS)
 - **[indent-to-tree](https://github.com/foldmaker/indent-to-tree)**: Converts indentation-based input into a tree
 
-## TokenMapping (Foldmaker is Opinionated!)
+## TokenMapping
 Foldmaker is based on a technique, that I would like to call "TokenMapping". Real power of Foldmaker comes from this technique. I don't believe I'm the first person to propose this technique, however I couldn't find it anywhere, so if you know its previous uses, please inform me.
 
 TokenMapping is basically a specification for the structure of the Foldmaker object. A Foldmaker object has two main properties: 
