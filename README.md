@@ -17,9 +17,12 @@ import Foldmaker from 'foldmaker'
 ```
 
 ## Demos
+
+- **[css-nested](https://github.com/foldmaker/css-nested)**: Unwraps nested rules (like SCSS)
+
+## Demos (not done yet)
 - **[infinite-loop-protection](https://github.com/foldmaker/infinite-loop-protection)**: A JavaScript transpiler that modifies your loops with a break condition
 - **[shallow-ast](https://github.com/foldmaker/shallow-ast)**: A fast and 'shallow' AST generator for JavaScript
-- **[css-nested](https://github.com/foldmaker/css-nested)**: Unwraps nested rules (like SCSS)
 - **[css-indent](https://github.com/foldmaker/css-indent)**: Unwraps nested rules (like SASS)
 - **[indent-to-tree](https://github.com/foldmaker/indent-to-tree)**: Converts indentation-based input into a tree
 
