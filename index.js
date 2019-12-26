@@ -1,25 +1,29 @@
 // Main class
 export default class Foldmaker {
-  constructor(tokens) {
-    if (tokens && !tokens.array && !tokens.string) {
-      this.array = tokens.map(el => el.value)
-      this.string = tokens.map(el => el.type).join('')
+  constructor(obj) {
+    if (obj && typeof obj === 'object') {
+      this.array = obj.map(el => el.value)
+      this.string = obj.map(el => el.type).join('')
     } else {
       this.array = []
       this.string = ''
     }
     this.modified = false
   }
+
   parse(tokens, directives) {
     let map = this
     let emptyMap = new Foldmaker()
+    /* debug */var startTime = Date.now()
     do {
-      tokenize(map.string, tokens, direct(map.array, directives, emptyMap))
+      /* debug */if (Date.now() - startTime > 100) {console.warn('infinite loop busted'); break}
+      tokenize(map.string, tokens, direct(map, directives, emptyMap))
       map = emptyMap
       emptyMap = new Foldmaker()
     } while (map.modified === true)
-    return map.array
+    return map
   }
+
   // To be used on an empty foldmaker
   add(string, object) {
     this.array.push(object)
@@ -52,22 +56,11 @@ export let traverseObjects = (array, callback) => {
   })
 }
 
-// Generally used for finalization
-export let flatten = (array, callback) => {
-  let accumulator = []
-  let flattenInner = () => {
-    array.forEach(el => {
-      if (Array.isArray(el)) {
-        accumulator = accumulator.concat(flattenInner(el))
-      } else if (typeof el === 'object') {
-        accumulator = accumulator.concat(callback(el))
-      } else {
-        accumulator = accumulator.concat(el)
-      }
-    })
-  }
-  flattenInner()
-  return accumulator.join('')
+export let flatten = (arr, fn = a => a) => {
+  return arr.reduce(function(flat, el) {
+    let val = flat.concat(Array.isArray(el) ? flatten(el) : fn(el))
+    return val
+  }, [])
 }
 
 export let tokenize = (string, TOKENS, CALLBACK) => {
@@ -75,8 +68,12 @@ export let tokenize = (string, TOKENS, CALLBACK) => {
   let tokens = []
   let len = TOKENS.length
 
+  /* debug */var startTime = Date.now()
   while (string) {
+    /* debug */if (Date.now() - startTime > 100) {console.warn('infinite loop'); break}
+    /* debug */var startTime = Date.now()
     for (let i = 0; i < len; i += 1) {
+      /* debug */if (Date.now() - startTime > 100) {console.warn('infinite loop'); break}
       // Try to find a token. If not found, go to the next iteration of the loop
       let m = TOKENS[i][1].exec(string)
       if (!m || m.index !== 0) continue
@@ -96,9 +93,9 @@ export let tokenize = (string, TOKENS, CALLBACK) => {
   return tokens
 }
 
-export let getOccurences = (array, m, index) => {
+export let getOccurences = (map, m, index) => {
   let count = m[0].length
-  let whole = array.slice(index, count + index)
+  let whole = map.array.slice(index, count + index)
   let occurences = [whole]
 
   let cursor = 0
@@ -120,11 +117,14 @@ export let getOccurences = (array, m, index) => {
   return occurences
 }
 
-export let direct = (array, directives, self) => ({ type, value, m, index }) => {
-  let result = getOccurences(array, m, index)
+export let direct = (map, directives, self) => ({ type, value, m, index }) => {
+  let result = getOccurences(map, m, index)
   if (directives[type]) {
     let returnValue = directives[type](result, self)
-    if (returnValue) self.add('o', returnValue)
+    if (returnValue) {
+      if (Array.isArray(returnValue)) self.add(returnValue[0], returnValue[1])
+      else self.add('o', returnValue)
+    }
   } else {
     self.noop(result)
   }
