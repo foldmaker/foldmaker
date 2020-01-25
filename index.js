@@ -1,7 +1,6 @@
-// Main class
-export default class Foldmaker {
+class FoldmakerObject {
   constructor(obj) {
-    if (obj && typeof obj === 'object') {
+    if (obj && typeof Array.isArray(obj)) {
       this.array = obj.map(el => el.value)
       this.string = obj.map(el => el.type).join('')
     } else {
@@ -11,17 +10,23 @@ export default class Foldmaker {
     this.modified = false
   }
 
-  parse(tokens, directives) {
-    let map = this
-    let emptyMap = new Foldmaker()
-    /* debug */var startTime = Date.now()
+  replace(tokens) {
+    // Add this as the last token by default, this precaution prevents infinite loops
+    tokens.push(['default', /[\s\n\S]/])
+    return replace(this, tokens)
+  }
+
+  parse(...visitors) {
+    let tokens = getTokensFromVisitors(visitors)
+    let self = this
     do {
-      /* debug */if (Date.now() - startTime > 100) {console.warn('infinite loop busted'); break}
-      tokenize(map.string, tokens, direct(map, directives, emptyMap))
-      map = emptyMap
-      emptyMap = new Foldmaker()
-    } while (map.modified === true)
-    return map
+      self = replace(self, tokens)
+    } while (self.modified === true)
+    return self
+  }
+
+  flatten(callback) {
+    return flatten(this.array, callback)
   }
 
   // To be used on an empty foldmaker
@@ -33,59 +38,36 @@ export default class Foldmaker {
 
   noop(result) {
     this.array = this.array.concat(result[0])
-    this.string += result.m[0]
+    this.string += result.map[0]
   }
 }
 
-// Foldmaker constructor
-export let from = tokens => new Foldmaker(tokens)
+export let visitor = (token, directive) => ({ token, directive })
 
-// Basic traversal
-export let traverse = (array, callback) => {
-  array.forEach(el => {
-    callback(el)
-  })
-}
-
-// Basic traversal of objects
-export let traverseObjects = (array, callback) => {
-  array.forEach(el => {
-    if (typeof el === 'object') {
-      callback(el)
-    }
-  })
-}
-
-export let flatten = (arr, fn = a => a) => {
-  return arr.reduce(function(flat, el) {
-    let val = flat.concat(Array.isArray(el) ? flatten(el) : fn(el))
+export let flatten = (ARRAY, CALLBACK = value => value) =>
+  ARRAY.reduce((accumulator, item) => {
+    let val = accumulator.concat(Array.isArray(item) ? flatten(item) : CALLBACK(item))
     return val
   }, [])
-}
 
-export let tokenize = (string, TOKENS, CALLBACK) => {
+export let tokenize = (STRING, TOKENS, CALLBACK) => {
   let index = 0
   let tokens = []
+  // Add this as the last token by default, this will prevent infinite loops
+  TOKENS.push(['0', /[\s\n\S]/])
   let len = TOKENS.length
 
-  /* debug */var startTime = Date.now()
-  while (string) {
-    /* debug */if (Date.now() - startTime > 100) {console.warn('infinite loop'); break}
-    /* debug */var startTime = Date.now()
+  while (STRING) {
     for (let i = 0; i < len; i += 1) {
-      /* debug */if (Date.now() - startTime > 100) {console.warn('infinite loop'); break}
       // Try to find a token. If not found, go to the next iteration of the loop
-      let m = TOKENS[i][1].exec(string)
-      if (!m || m.index !== 0) continue
-      let { type, value } = {
-        type: TOKENS[i][0],
-        value: m[0]
-      }
-      let returnValue = CALLBACK ? CALLBACK({ type, value, m, index }) : { type, value }
+      let map = TOKENS[i][1].exec(STRING)
+      if (!map || map.index !== 0) continue
+      let { type, value } = { type: TOKENS[i][0], value: map[0] }
+      let returnValue = CALLBACK ? CALLBACK({ type, value, map, index }) : { type, value }
       if (returnValue) tokens.push(returnValue)
 
       // Advance by slicing the string and push tokens to the list
-      string = string.slice(value.length)
+      STRING = STRING.slice(value.length)
       index += value.length
       break
     }
@@ -93,17 +75,16 @@ export let tokenize = (string, TOKENS, CALLBACK) => {
   return tokens
 }
 
-export let getOccurences = (map, m, index) => {
-  let count = m[0].length
-  let whole = map.array.slice(index, count + index)
+export const getOccurences = (array, map, index) => {
+  let count = map[0].length
+  const whole = array.slice(index, count + index)
   let occurences = [whole]
-
   let cursor = 0
-  m.forEach((el, i) => {
+  map.forEach((el, i) => {
     if (i !== 0) {
       if (el) {
-        let count = el.length
-        let occ = whole.slice(cursor, count + cursor)
+        count = el.length
+        const occ = whole.slice(cursor, count + cursor)
         occurences.push(occ)
         cursor = count + cursor
       } else {
@@ -111,27 +92,39 @@ export let getOccurences = (map, m, index) => {
       }
     }
   })
-  occurences.m = m
+  occurences.map = map
   occurences.index = index
-  occurences.count = m[0].length
+  occurences.count = map[0].length
   return occurences
 }
 
-export let direct = (map, directives, self) => ({ type, value, m, index }) => {
-  let result = getOccurences(map, m, index)
-  if (directives[type]) {
-    let returnValue = directives[type](result, self)
-    if (returnValue) {
-      if (Array.isArray(returnValue)) self.add(returnValue[0], returnValue[1])
-      else self.add('o', returnValue)
-    }
+export const direct = (array, newState) => ({ type, value, map, index }) => {
+  const result = getOccurences(array, map, index)
+  const returnValue = type(result)
+  if (returnValue) {
+    if (Array.isArray(returnValue)) newState.add(returnValue[0], returnValue[1])
+    else newState.add('1', returnValue)
   } else {
-    self.noop(result)
+    newState.noop(result)
   }
 }
 
-Foldmaker.from = from
-Foldmaker.traverse = traverse
-Foldmaker.traverseObjects = traverseObjects
+export const replace = (self, tokens) => {
+  let newState = Foldmaker()
+  tokenize(self.string, tokens, direct(self.array, newState))
+  return newState
+}
+
+export const getTokensFromVisitors = visitors => {
+  if (visitors[0] instanceof RegExp) visitors = [{ token: visitors[0], directive: visitors[1] }]
+  let tokens = visitors.map(visitor => [visitor.directive, visitor.token])
+  // Add this as the last token by default, this will prevent infinite loops
+  tokens.push([() => null, /[\s\n\S]/])
+  return tokens
+}
+
+const Foldmaker = tokens => new FoldmakerObject(tokens)
 Foldmaker.flatten = flatten
 Foldmaker.tokenize = tokenize
+Foldmaker.visitor = visitor
+export default Foldmaker
