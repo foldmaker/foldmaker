@@ -10,7 +10,8 @@ class FoldmakerObject {
     this.modified = false
   }
 
-  replace(tokens) {
+  replace(...visitors) {
+    let tokens = getTokensFromVisitors(visitors)
     // Add this as the last token by default, this precaution prevents infinite loops
     tokens.push(['default', /[\s\n\S]/])
     return replace(this, tokens)
@@ -37,7 +38,7 @@ class FoldmakerObject {
   }
 
   noop(result) {
-    this.array = this.array.concat(result[0])
+    this.array = this.array.concat(result[0]) // TODO
     this.string += result.map[0]
   }
 }
