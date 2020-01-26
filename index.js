@@ -10,15 +10,15 @@ class FoldmakerObject {
     this.modified = false
   }
 
-  replace(...visitors) {
-    let tokens = getTokensFromVisitors(visitors)
+  replace(visitors, callback) {
+    let tokens = getTokensFromVisitors(visitors, callback)
     // Add this as the last token by default, this precaution prevents infinite loops
     tokens.push(['default', /[\s\n\S]/])
     return replace(this, tokens)
   }
 
-  parse(...visitors) {
-    let tokens = getTokensFromVisitors(visitors)
+  parse(visitors, callback) {
+    let tokens = getTokensFromVisitors(visitors, callback)
     let self = this
     do {
       self = replace(self, tokens)
@@ -116,8 +116,8 @@ export const replace = (self, tokens) => {
   return newState
 }
 
-export const getTokensFromVisitors = visitors => {
-  if (visitors[0] instanceof RegExp) visitors = [{ token: visitors[0], directive: visitors[1] }]
+export const getTokensFromVisitors = (visitors, callback) => {
+  if (visitors instanceof RegExp) visitors = [{ token: visitors, directive: callback }]
   let tokens = visitors.map(visitor => [visitor.directive, visitor.token])
   // Add this as the last token by default, this will prevent infinite loops
   tokens.push([() => null, /[\s\n\S]/])
