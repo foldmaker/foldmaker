@@ -12,8 +12,6 @@ class FoldmakerObject {
 
   replace(visitors, callback) {
     let tokens = getTokensFromVisitors(visitors, callback)
-    // Add this as the last token by default, this precaution prevents infinite loops
-    tokens.push(['default', /[\s\n\S]/])
     return replace(this, tokens)
   }
 
