@@ -23,9 +23,10 @@ class FoldmakerObject {
     } while (self.modified === true)
     return self
   }
-
-  flatten(callback) {
-    return flatten(this.array, callback)
+  
+  traverse(callback) {
+    this.array = traverse(this.array, callback)
+    return this
   }
 
   // To be used on an empty foldmaker
@@ -43,11 +44,11 @@ class FoldmakerObject {
 
 export let visitor = (token, directive) => ({ token, directive })
 
-export let flatten = (ARRAY, CALLBACK = value => value) =>
-  ARRAY.reduce((accumulator, item) => {
-    let val = accumulator.concat(Array.isArray(item) ? flatten(item) : CALLBACK(item))
-    return val
-  }, [])
+export const traverse = (node, callback) => {
+  let also = subNode => subNode && traverse(subNode, callback)
+  if(Array.isArray(node)) return node.map((item) => callback(item, also))
+  else return callback(node, also)
+}
 
 export let tokenize = (STRING, TOKENS, CALLBACK) => {
   let index = 0
