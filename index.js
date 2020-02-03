@@ -29,6 +29,10 @@ class FoldmakerObject {
     return this
   }
 
+  call(callback) {
+    return callback(this)
+  }
+
   // To be used on an empty foldmaker
   add(string, object) {
     this.array.push(object)
@@ -42,7 +46,7 @@ class FoldmakerObject {
   }
 }
 
-export let visitor = (token, directive) => ({ token, directive })
+export let visitor = (token, directive) => ([directive, token])
 
 export const traverse = (node, callback) => {
   let also = subNode => subNode && traverse(subNode, callback)
@@ -115,16 +119,15 @@ export const replace = (self, tokens) => {
   return newState
 }
 
-export const getTokensFromVisitors = (visitors, callback) => {
-  if (visitors instanceof RegExp) visitors = [{ token: visitors, directive: callback }]
-  let tokens = visitors.map(visitor => [visitor.directive, visitor.token])
+export const getTokensFromVisitors = (tokens, callback) => {
+  if (tokens instanceof RegExp) tokens = [[callback, tokens]]
   // Add this as the last token by default, this will prevent infinite loops
   tokens.push([() => null, /[\s\n\S]/])
   return tokens
 }
 
 const Foldmaker = tokens => new FoldmakerObject(tokens)
-Foldmaker.flatten = flatten
+Foldmaker.traverse = traverse
 Foldmaker.tokenize = tokenize
 Foldmaker.visitor = visitor
 export default Foldmaker
