@@ -3,7 +3,10 @@ Foldmaker is a lightweight tool (120 lines uncommented), and **a way of thinking
 
 > **PARSING IS RE-TOKENIZATION**
 
-Now you know the Truth. With the power of the Truth, you can implement JSON.parse only in [~45 lines](https://github.com/foldmaker/json-parse) or SCSS-like preprocessors only in [~50 lines](https://github.com/foldmaker/css-nested). It may seem ambiguous, but more on this is explained below.
+Now you know the Truth. With the power of the Truth, you can implement JSON.parse only in [~45 lines](https://github.com/foldmaker/json-parse) or SCSS-like preprocessors only in [~50 lines](https://github.com/foldmaker/css-nested). It's relieving that this Truth can explained with words. Not all the truths can be. Some truths are only metaphors. This one is not only a metaphor. It's very literal: Foldmaker uses its tokenizer function, also during parsing. The same function. We use it, first to tokenize our **string**, then to tokenize our **token stream**. Then we use it again, on the resulting token stream, and so on. Repeat after me: 
+> To **parse()** is to **tokenize()**. and to recursively **parse()** is only to **tokenize()** enough times.
+
+More on this is explained below.
 
 ## Usage
 Foldmaker can be installed with [npm](https://docs.npmjs.com/getting-started/what-is-npm), by the following command:
@@ -16,10 +19,6 @@ import  Foldmaker  from  'foldmaker'
 ```
 
 ## The truth: "PARSING IS RE-TOKENIZATION"
-
-It's relieving that this Truth can explained with words. Not all the truths can be. Some truths are only metaphors. This one is not only a metaphor. It's very literal: Foldmaker uses its tokenizer function, also during parsing. The same function. We use it, first to tokenize our **string**, then to tokenize our **token stream**. Repeat after me: 
-> To **parse()** is to **tokenize()**. and to recursively **parse()** is only to **tokenize()** enough times.
-
 
 
 
