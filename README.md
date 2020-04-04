@@ -1,10 +1,12 @@
 # ![](logo.png)
+
 Foldmaker is a lightweight tool (120 lines uncommented), and **a way of thinking** for building parsers. It was designed to be as user-friendly and minimal as possible. Design of Foldmaker is centered around a single idea that makes parsing easier:
 
 > **PARSING IS RE-TOKENIZATION**
 
-Now you know the Truth. With the power of the Truth, you can implement JSON.parse only in [~45 lines](https://github.com/foldmaker/json-parse) or SCSS-like preprocessors only in [~50 lines](https://github.com/foldmaker/css-nested). It's relieving that this Truth can explained with words. Not all the truths can be. Some truths are only metaphors. This one is not only a metaphor. It's very literal: Foldmaker uses its tokenizer function, also during parsing. The same function. We use it, first to tokenize our **string**, then to tokenize our **token stream**. Then we use it again, on the resulting token stream, and so on. Repeat after me: 
-> To **parse()** is to **tokenize()**. and to recursively **parse()** is only to **tokenize()** enough times.
+Now you know the truth. With the power of the truth, you can implement JSON.parse only in [~45 lines](https://github.com/foldmaker/json-parse) or SCSS-like preprocessors only in [~50 lines](https://github.com/foldmaker/css-nested). It's relieving that this truth can be explained with words. Not all the truths can be. Some truths are metaphors only. This one is not a metaphor. It's quite literal: Foldmaker uses its tokenizer function, also during parsing. The same function. We use it, first to tokenize our **string**, then to tokenize our **token stream**. Then we use it again, on the resulting token stream, and so on. Repeat after me:
+
+> To **parse()** is to **tokenize()**. and to recursively **parse()** is solely to **tokenize()** enough times.
 
 More on this is explained below.
 
@@ -20,26 +22,71 @@ import  Foldmaker  from  'foldmaker'
 
 ## The truth: "PARSING IS RE-TOKENIZATION"
 
+In foldmaker, tokenization and parsing are analogous processes. Under the hood, our tokenizer function is also used as the parser function. First our **string** gets tokenized by it, then our **token stream** gets tokenized. This is possible, because in Foldmaker, **token stream is a string!** This is possible thanks to the first rule of Foldmaker's specification:
 
+> 1. Use one-character token names
 
-
-
-
-Another level of abstraction to the Truth,
-> Use one-character token names.
-
-
-Let's say, we want to match the condition inside the if block.
+Now, I'm going to explain why we have this rule. Let's say, in the following string, we want to match the condition inside the if block. We want to identifiy `foo === 1` part as the "condition" .
 ```
 if(foo === 1) { print('ONE') }
 ```
-Imagine, after tokenization, it has the following form. `i` for if, `p` for primitive, `o` for operator and `b` for body.
+Imagine, after tokenization, we have the following array of tokens. `i` for if, `p` for primitive, `o` for operator and `b` for body.
+```js
+let tokens = [
+  {type: "i", value: "if"},
+  {type: "(", value: "("},
+  {type: "p", value: "foo"},
+  {type: "o", value: "==="},
+  {type: "p", value: "1"},
+  {type: ")", value: ")"},
+  {type: "b", value: "{ print('ONE') }"}
+]
+```
+`Foldmaker` function takes **array of tokens** as the input. So when we input our array to Foldmaker like below:
+```js
+Foldmaker(tokens)
+```
+we get the following `FoldmakerObject`. 
 ```js
 {
   array: ["if", "(", "foo ", "=== ", "1", ") ", "{ print('ONE') }"  ],
   string: "i(pop)b",
+  prototype: FoldmakerObject
 }
 ```
+Observe that both token types and values are mapped to create an array and a string. Element at each indexes of the string and the array inside this object, maps to each other.
+
+Foldmaker is an abstraction for you to  The most important thing
+
+Before the truth, you need to learn 3 rules of Foldmaker:
+
+> 2. Don't use '0' as a token name, it's reserved for unknown token type.
+> 3. Don't use '1' as a token name, it's reserved for unset parsed token type.
+
+Let's say, we want to be able to parse the following string:
+```
+{name:Spongebob, friends:{friend1: Patrick, friend2: Sandy}}
+```
+The following is  **BNF**  (Backus-Naur Form) notation on how to parse it.
+```
+<value>    ::= <object> | <string> 
+<object>   ::= "{" <property> {"," <property>}* "}" | "{}"
+<property> ::= <string> ":" <value>
+```
+
+```js
+Tokenizer part:
+s: /\w+/
+*: /[\{\},:]/ 
+ 
+Parser part:
+v: /o|s/
+o: /{p(,p)*}|{}/
+p: /s:v/
+```
+This is  **BNF**  (Backus-Naur Form) notation to describe context-free grammars
+
+
 It's clear that we need to match  `pop` (primitive, operator, primitive in series) right?
 Let's reduce `pop` (primitive, operator, primitive in series) into `c` (condition)
 ```js
