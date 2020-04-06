@@ -17,8 +17,6 @@ function _iterableToArrayLimit(arr, i) { if (typeof Symbol === "undefined" || !(
 
 function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
-function _readOnlyError(name) { throw new Error("\"" + name + "\" is read-only"); }
-
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
@@ -69,7 +67,7 @@ var FoldmakerObject = /*#__PURE__*/function () {
       var self = this;
 
       do {
-        self = (_readOnlyError("self"), this._replace(self, tokens, debug));
+        self = this._replace(self, tokens, debug);
       } while (self.modified === true);
 
       return self;

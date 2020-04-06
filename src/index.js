@@ -16,7 +16,7 @@ export class FoldmakerObject {
 
   parse(...args) {
     const { tokens, debug } = this._getDataFromArguments(args)
-    const self = this
+    let self = this
     do {
       self = this._replace(self, tokens, debug)
     } while (self.modified === true)
