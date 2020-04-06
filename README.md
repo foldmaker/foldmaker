@@ -8,23 +8,19 @@ Now you know the truth. With the power of the truth, you can implement JSON.pars
 
 > To **parse()** is to **tokenize()**. and to recursively **parse()** is solely to **tokenize()** enough times.
 
-**Input string:**
-```js
-{"a": 1, "b": 2, "c": [1, 2, 3, {"deep": {}}]}
-```
-**Foldmaker's parsing steps:**
-```
-Token stream : {s:n,s:n,s:[n,n,n,{s:{}}]}
-Iteration 1  : {k,k,s:[n,n,n,{s:o}]}
-Iteration 2  : {k,k,s:[n,n,n,{k}]}
-Iteration 3  : {k,k,s:[n,n,n,o]}
-Iteration 4  : {k,k,s:a}
-Iteration 5  : {k,k,k}
-Iteration 6  : o
-Iteration 7  : o
-```
+More on this is explained below.
 
-## Usage
+### Special versions
+
+-  [@foldmaker/strict](https://github.com/foldmaker/foldmaker-strict) - Strict mode with error logging
+-  [@foldmaker/capturing-groups](https://github.com/foldmaker/foldmaker-capturing-groups) - Offers capturing group  support
+
+### Examples
+-  [@foldmaker/json-parse](https://github.com/foldmaker/json-parse) - JSON.parse implementation. Does not check validity.
+-  [@foldmaker/css-nested](https://github.com/foldmaker/css-nested) - Tiny plugin to unwrap nested CSS rules (like SCSS)
+-  [@foldmaker/shallow-ast](https://github.com/foldmaker/shallow-ast) - Error tolerant AST generator for JS-like languages
+
+### Installation
 Foldmaker can be installed with [npm](https://docs.npmjs.com/getting-started/what-is-npm), by the following command:
 ```sh
 npm install foldmaker
@@ -34,7 +30,7 @@ Importing Foldmaker by the default export is enough:
 import  Foldmaker  from  'foldmaker'
 ```
 
-## The truth: "PARSING IS RE-TOKENIZATION"
+## How it works?
 
 In foldmaker, tokenization and parsing are analogous processes. Our tokenizer function is also used as the parser function under the hood. First our **string** gets tokenized by it, then our **token stream** gets tokenized. This is possible, because in Foldmaker, **token stream is a string!** This is possible thanks to the **first rule** of Foldmaker's specification:
 
@@ -68,7 +64,9 @@ we get the following `FoldmakerObject`.
   __proto__: FoldmakerObject
 }
 ```
-This is the first maneuver of Foldmaker. It creates two streams by joining types and values. Observe that each element of the string maps to an element in the array with the same index, and vice versa. Now, let's return to our case. In our case, we need to match the string that is represented by `pop` (primitive, operator, primitive in series) right? Let's say that we are going to mark that as `c` (condition). First, let's log our matching occurrence in the console. We simply use `replace` method of Foldmaker:
+This is the first maneuver of Foldmaker. It creates two streams by joining types and values. Observe that each element of the string maps to an element in the array with the same index, and vice versa. Now, let's return to our case. In our case, we need to match the string that is represented by `pop` (primitive, operator, primitive in series) right? Let's say that we are going to mark that as `c` (condition). First, let's log our matching occurrence in the console. 
+
+We simply use `replace` method of Foldmaker:
 ```js
 let fm = fm.replace(/pop/, result => console.log(result))
 console.log(fm.string)
@@ -97,119 +95,48 @@ console output will be:
   string: "i(c)b",
 }
 ```
-As you can see, Foldmaker is an abstraction for you to produce 
-
-Before the truth, you need to learn 3 rules of Foldmaker:
 
 > 2. Don't use '0' as a token name, it's reserved for unknown token type.
 > 3. Don't use '1' as a token name, it's reserved for unset parsed token type.
-
-Let's say, we want to be able to parse the following string:
-```
-{name:Spongebob, friends:{friend1: Patrick, friend2: Sandy}}
-```
-The following is  **BNF**  (Backus-Naur Form) notation on how to parse it.
-```
-<value>    ::= <object> | <string> 
-<object>   ::= "{" <property> {"," <property>}* "}" | "{}"
-<property> ::= <string> ":" <value>
-```
-
+**Input string:**
 ```js
-Tokenizer part:
-s: /\w+/
-*: /[\{\},:]/ 
- 
-Parser part:
-v: /o|s/
-o: /{p(,p)*}|{}/
-p: /s:v/
+{"a": 1, "b": 2, "c": [1, 2, 3, {"deep": {}}]}
 ```
-This is  **BNF**  (Backus-Naur Form) notation to describe context-free grammars
-
-
-Now, did you see how easy it was? Let's see the other alternative
+**Foldmaker's parsing steps:**
 ```
-CONDITION: PRIMITIVE, OPERATOR, PRIMITIVE {, OPERATOR, PRIMITIVE}*
-c: /pop(op)*/
+Token stream : {s:n,s:n,s:[n,n,n,{s:{}}]}
+Iteration 1  : {k,k,s:[n,n,n,{s:o}]}
+Iteration 2  : {k,k,s:[n,n,n,{k}]}
+Iteration 3  : {k,k,s:[n,n,n,o]}
+Iteration 4  : {k,k,s:a}
+Iteration 5  : {k,k,k}
+Iteration 6  : o
+Iteration 7  : o
 ```
 
-**Summary:** Use one-character token names, so that you can leverage the power of string matching twice.
-
-Foldmaker imposes a restricted way to write parsers. The user should give tokens one-character names. Like 'a', 'B' or '5'.
-is based on a smart way, that I would like to call "Map of the Territory". 
-
-Real power of Foldmaker comes from this technique. I don't believe I'm the first person to propose this technique, however I couldn't find it anywhere, so if you know its previous uses, please inform me.
-
-  
-
-TokenMapping is basically a specification for the structure of the Foldmaker object. A Foldmaker object has two main properties:
-
-**`array: Array`** and **`string: String`**. Take a look at this simple, valid Foldmaker object:
-
-```js
-{
-  array: ["if", "(", "foo ", "=== ", "1", ") ", "{ print('ONE') }"  ],
-  string: "k(ion)e",
-}
-```
-
-Observe that both `array`'s and `string`'s length is 7 and they map to each other.
-
-```js
-
-"if", "(", "foo ", "=== ", "100", ")", "{ print('ONE') }",
-
-k  (  i  o  n  )  b
-
-```
-
-This is simply it. A Foldmaker object is valid if `fm.array.length === fm.string.length` is true, where `fm` is the Foldmaker object. Now, how does this exactly help? First, I should mention that, in this example, "k" stands for keyword, "i" stands for identifier, "o" for operator, "n" for number, "b" for block, and the rest stands for the same characters as themselves (parantheses).
-
-  
-
-Now, see the following RegExp that matches expressions (non-zero length clusters of identifiers, operators and numbers). Let's call this type of RegExps as "meta-expression" or "MetaExp"
-
-...
-
-# This Section Is Incomplete
-
-  
-
-- When using tokenizer, each token type must be a **string**, and this string's **length must be exactly 1**.
-
-  
-
-(more on this later). This makes Foldmaker an opinionated parser. This brings a lot of advantages:
-
-- Since searching with regular expressions is highly optimized, the resulting parsers can be more performant.
-
-  
-
-For instance, `Foldmaker.tokenize()`, which is the lexer function, does not return the line and row numbers of the token. However, if you want, you can easily implement it by providing a callback function.
-
-  
-
-Foldmaker consists of `Foldmaker` class and a few helpers: `Foldmaker.tokenize()`, `Foldmaker.flatten()`, `Foldmaker.traverse()`, and `Foldmaker.traverseObjects()`. These helpers are the ones that are required for common use cases. Foldmaker class
-
-  
-  
-
-## Examples
 
 ## API
 
-  
+### Exports
+| Export                      | Usage                                | Description  |
+|-----------------------------|--------------------------------------|--------------|
+| **default** (function)      | `Foldmaker(tokensArray)  `           | Takes a `tokensArray` and returns a FoldmakerObject  |
+| **tokenize** (function)     | `tokenize(string, dictionary {, callback })` | Tokenizes the `string` by using `dictionary`. Returns an array of tokens.  |
+| **traverse** (function)     | `traverse(node, callback)`           | Conducts tree traversal for `node`. Node can be of type non-array or array. |
+| **visitor** (function)      | `visitor(regexp, callback)`          | Is a helper function |
+| **FoldmakerObject** (class) | -                                    |   |
+| **fm** (function)           | `fm(tokensArray)`                    | Is a shorthand for default export (circular)  |
 
-### Foldmaker class constructor
+### Methods of `FoldmakerObject`
+| Method   | Usage                                | Arguments of callback           |   |   |
+|----------|--------------------------------------|---------------------------------|---|---|
+| **parse**    | `parse(regex , callback {, debug })`   | `(result {, state {, oldState}})` |   |   |
+| **replace**  | `replace(regex , callback {, debug })` | `(result {, state {, oldState}})` |   |   |
+| **traverse** | `traverse(callback)`                   | `(object {, alsoTraverse})`       |   |   |
+| **add**      | `add(string, array)`                   | -                                |   |   |
 
-### tokenize()
 
-### flatten()
 
-### traverse()
-
-  
 
 https://github.com/jashkenas/coffeescript/wiki/list-of-languages-that-compile-to-js#tools-for-compiler-writers
 
