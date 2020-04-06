@@ -4,7 +4,7 @@
   "description": "A small parser generator toolkit that can be used to build parsers, transpilers, formatters.",
   "main": "index.js",
   "scripts": {
-    "test": "mocha"
+    "build": "babel ./src --out-dir ./dist --ignore test.js"
   },
   "repository": {
     "type": "git",
@@ -15,13 +15,14 @@
     "parser",
     "lexer",
     "tokenizer",
-    "generator",
-    "regexp",
-    "transpiler"
+    "transpiler",
+    "regexp"
   ],
   "dependencies": {},
   "devDependencies": {
-    "mocha": ""
+    "@babel/cli": "^7.8.4",
+    "@babel/core": "^7.9.0",
+    "@babel/preset-env": "^7.9.0"
   },
   "author": "Onur Kerimov",
   "license": "MIT"
