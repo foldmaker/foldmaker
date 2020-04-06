@@ -2,7 +2,7 @@
   "name": "foldmaker",
   "version": "1.0.0",
   "description": "A small parser generator toolkit that can be used to build parsers, transpilers, formatters.",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "build": "babel ./src --out-dir ./dist --ignore test.js"
   },
