@@ -1,8 +1,8 @@
 export class FoldmakerObject {
-  constructor(obj) {
-    let hasTokens = obj && Array.isArray(obj)
-    this.array = hasTokens ? obj.map((el) => el.value) : []
-    this.string = hasTokens ? obj.map((el) => el.type).join('') : ''
+  constructor(tokens) {
+    let hasTokens = tokens && Array.isArray(tokens)
+    this.types = hasTokens ? tokens.map((el) => el.type).join('') : ''
+    this.values = hasTokens ? tokens.map((el) => el.value) : []
     this.modified = false
     // These are here: easy extendability
     this.__proto__._tokenize = tokenize
@@ -10,56 +10,56 @@ export class FoldmakerObject {
   }
 
   replace(...args) {
-    const { tokens, debug } = this._getDataFromArguments(args)
-    return this._replace(this, tokens, debug)
+    const { dictionary, debug } = this._getDataFromArguments(args)
+    return this._replace(this, dictionary, debug)
   }
 
   parse(...args) {
-    const { tokens, debug } = this._getDataFromArguments(args)
+    const { dictionary, debug } = this._getDataFromArguments(args)
     let self = this
     do {
-      self = this._replace(self, tokens, debug)
+      self = this._replace(self, dictionary, debug)
     } while (self.modified === true)
     return self
   }
 
   traverse(callback) {
-    this.array = this._traverse(this.array, callback)
+    this.values = this._traverse(this.values, callback)
     return this
   }
 
-  add(string, object) {
-    this.array = this.array.concat(object)
-    this.string += string
+  add(string, values) {
+    this.types += string
+    this.values = this.values.concat(values)
   }
   
-  _getDataFromArguments([tokens, callback, debug]) {
-    if (tokens instanceof RegExp) {
-      tokens = [[callback, tokens]]
+  _getDataFromArguments([dictionary, callback, debug]) {
+    if (dictionary instanceof RegExp) {
+      dictionary = [[callback, dictionary]]
     } else {
-      tokens = tokens.map(([a, b]) => [b, a])
+      dictionary = dictionary.map(([a, b]) => [b, a])
       debug = callback
     }
     // Add this as the last token by default, this will prevent infinite loops
-    tokens.push([() => undefined, /[\s\n\S]/])
-    return { tokens, debug }
+    dictionary.push([() => undefined, /[\s\n\S]/])
+    return { dictionary, debug }
   }
 
-  _replace(oldState, tokens, debug) {
+  _replace(oldState, dictionary, debug) {
     let state = Foldmaker()
-    let { string, array } = oldState
-    this._tokenize(string, tokens, ({ type, map, index }) => {
-      const occurrence = this._getOccurrence(array, map, index)
+    let { types, values } = oldState
+    this._tokenize(types, dictionary, ({ type, map, index }) => {
+      const occurrence = this._getOccurrence(values, map, index)
       this._manipulate(type, occurrence, state, oldState)
     })
     if(debug) debug(state)
     return state
   }
   
-  _getOccurrence (array, map, index) {
+  _getOccurrence (values, map, index) {
     let count = map[0].length
     return {
-      raw: array.slice(index, count + index),
+      raw: values.slice(index, count + index),
       index, count, map
     }
   }
@@ -106,7 +106,7 @@ export const traverse = (node, callback) => {
 
 export const visitor = (a, b) => [a, b]
 
-const Foldmaker = (tokens) => new FoldmakerObject(tokens)
+const Foldmaker = (dictionary) => new FoldmakerObject(dictionary)
 Foldmaker.FoldmakerObject = FoldmakerObject
 Foldmaker.traverse = traverse
 Foldmaker.tokenize = tokenize
