@@ -1,6 +1,6 @@
 # ![](logo.png)
 
-Foldmaker is a lightweight tool (120 lines uncommented), and **a way of thinking** for building parsers. It was designed to be as user-friendly and minimal as possible. Design of Foldmaker is centered around a single idea that makes parsing easier:
+Foldmaker is a lightweight tool (120 lines uncommented), and **a way of thinking** for building general-purpose parsers. It was designed to be minimal and user-friendly. It has its own characteristic way of parsing. Design of Foldmaker is centered around a single idea that makes parsing easier:
 
 > **PARSING IS RE-TOKENIZATION**
 
@@ -8,7 +8,21 @@ Now you know the truth. With the power of the truth, you can implement JSON.pars
 
 > To **parse()** is to **tokenize()**. and to recursively **parse()** is solely to **tokenize()** enough times.
 
-More on this is explained below.
+**Input string:**
+```js
+{"a": 1, "b": 2, "c": [1, 2, 3, {"deep": {}}]}
+```
+**Foldmaker's parsing steps:**
+```
+Token stream : {s:n,s:n,s:[n,n,n,{s:{}}]}
+Iteration 1  : {k,k,s:[n,n,n,{s:o}]}
+Iteration 2  : {k,k,s:[n,n,n,{k}]}
+Iteration 3  : {k,k,s:[n,n,n,o]}
+Iteration 4  : {k,k,s:a}
+Iteration 5  : {k,k,k}
+Iteration 6  : o
+Iteration 7  : o
+```
 
 ## Usage
 Foldmaker can be installed with [npm](https://docs.npmjs.com/getting-started/what-is-npm), by the following command:
@@ -22,11 +36,11 @@ import  Foldmaker  from  'foldmaker'
 
 ## The truth: "PARSING IS RE-TOKENIZATION"
 
-In foldmaker, tokenization and parsing are analogous processes. Under the hood, our tokenizer function is also used as the parser function. First our **string** gets tokenized by it, then our **token stream** gets tokenized. This is possible, because in Foldmaker, **token stream is a string!** This is possible thanks to the first rule of Foldmaker's specification:
+In foldmaker, tokenization and parsing are analogous processes. Our tokenizer function is also used as the parser function under the hood. First our **string** gets tokenized by it, then our **token stream** gets tokenized. This is possible, because in Foldmaker, **token stream is a string!** This is possible thanks to the **first rule** of Foldmaker's specification:
 
-> 1. Use one-character token names
+> 1. Always use one-character token names
 
-Now, I'm going to explain why we have this rule. Let's say, in the following string, we want to match the condition inside the if block. We want to identifiy `foo === 1` part as the "condition" .
+While this rule may seem to restrict the user, but it has its own advantages. Let me explain. Let's say, in the following string, we want to match the condition inside the if block. We want to identify `foo === 1` part as the "**condition**" .
 ```
 if(foo === 1) { print('ONE') }
 ```
@@ -42,21 +56,48 @@ let tokens = [
   {type: "b", value: "{ print('ONE') }"}
 ]
 ```
-`Foldmaker` function takes **array of tokens** as the input. So when we input our array to Foldmaker like below:
+Now let's input our **array of tokens** inside `Foldmaker`  like below:
 ```js
-Foldmaker(tokens)
+let fm = Foldmaker(tokens)
 ```
 we get the following `FoldmakerObject`. 
 ```js
 {
   array: ["if", "(", "foo ", "=== ", "1", ") ", "{ print('ONE') }"  ],
   string: "i(pop)b",
-  prototype: FoldmakerObject
+  __proto__: FoldmakerObject
 }
 ```
-Observe that both token types and values are mapped to create an array and a string. Element at each indexes of the string and the array inside this object, maps to each other.
-
-Foldmaker is an abstraction for you to  The most important thing
+This is the first maneuver of Foldmaker. It creates two streams by joining types and values. Observe that each element of the string maps to an element in the array with the same index, and vice versa. Now, let's return to our case. In our case, we need to match the string that is represented by `pop` (primitive, operator, primitive in series) right? Let's say that we are going to mark that as `c` (condition). First, let's log our matching occurrence in the console. We simply use `replace` method of Foldmaker:
+```js
+let fm = fm.replace(/pop/, result => console.log(result))
+console.log(fm.string)
+```
+Console output:
+```js
+First log: {
+  raw: ["foo",  "===",  "1"],
+  map: ["pop",  index:  0,  input:  "pop)b",  groups:  undefined],
+  index: 2,
+  count: 3
+}
+Second log: "i(pop)b"
+```
+As you can see on the first log, our occurrence is shown in the `raw` key. Since we didn't return anything inside the callback function of the `replace` method, the string in our Foldmaker instance (`fm.string`) did not change, as can be seen on the second log. Let's manipulate If we return something inside the callback function as the following:
+```js
+let fm = fm.replace(/pop/, result => {
+	return ['c', { value: result.raw }]
+})
+console.log(fm)
+```
+console output will be:
+```js
+{
+  array: ["if", "(", Object, ") ", "{ print('ONE') }"  ],
+  string: "i(c)b",
+}
+```
+As you can see, Foldmaker is an abstraction for you to produce 
 
 Before the truth, you need to learn 3 rules of Foldmaker:
 
@@ -87,14 +128,6 @@ p: /s:v/
 This is  **BNF**  (Backus-Naur Form) notation to describe context-free grammars
 
 
-It's clear that we need to match  `pop` (primitive, operator, primitive in series) right?
-Let's reduce `pop` (primitive, operator, primitive in series) into `c` (condition)
-```js
-{
-  array: ["if", "(", Object, ") ", "{ print('ONE') }"  ],
-  string: "i(c)b",
-}
-```
 Now, did you see how easy it was? Let's see the other alternative
 ```
 CONDITION: PRIMITIVE, OPERATOR, PRIMITIVE {, OPERATOR, PRIMITIVE}*
