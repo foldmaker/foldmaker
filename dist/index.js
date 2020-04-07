@@ -24,16 +24,17 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
 var FoldmakerObject = /*#__PURE__*/function () {
-  function FoldmakerObject(obj) {
+  function FoldmakerObject(tokens) {
     _classCallCheck(this, FoldmakerObject);
 
-    var hasTokens = obj && Array.isArray(obj);
-    this.array = hasTokens ? obj.map(function (el) {
-      return el.value;
-    }) : [];
-    this.string = hasTokens ? obj.map(function (el) {
+    var hasTokens = tokens && Array.isArray(tokens);
+    this.types = hasTokens ? tokens.map(function (el) {
       return el.type;
     }).join('') : '';
+    this.values = hasTokens ? tokens.map(function (el) {
+      return el.value;
+    }) : [];
+    this.props = hasTokens ? tokens : [];
     this.modified = false; // These are here: easy extendability
 
     this.__proto__._tokenize = tokenize;
@@ -48,10 +49,10 @@ var FoldmakerObject = /*#__PURE__*/function () {
       }
 
       var _this$_getDataFromArg = this._getDataFromArguments(args),
-          tokens = _this$_getDataFromArg.tokens,
+          dictionary = _this$_getDataFromArg.dictionary,
           debug = _this$_getDataFromArg.debug;
 
-      return this._replace(this, tokens, debug);
+      return this._replace(this, dictionary, debug);
     }
   }, {
     key: "parse",
@@ -61,13 +62,13 @@ var FoldmakerObject = /*#__PURE__*/function () {
       }
 
       var _this$_getDataFromArg2 = this._getDataFromArguments(args),
-          tokens = _this$_getDataFromArg2.tokens,
+          dictionary = _this$_getDataFromArg2.dictionary,
           debug = _this$_getDataFromArg2.debug;
 
       var self = this;
 
       do {
-        self = this._replace(self, tokens, debug);
+        self = this._replace(self, dictionary, debug);
       } while (self.modified === true);
 
       return self;
@@ -75,27 +76,28 @@ var FoldmakerObject = /*#__PURE__*/function () {
   }, {
     key: "traverse",
     value: function traverse(callback) {
-      this.array = this._traverse(this.array, callback);
+      this.values = this._traverse(this.values, callback);
       return this;
     }
   }, {
     key: "add",
-    value: function add(string, object) {
-      this.array = this.array.concat(object);
-      this.string += string;
+    value: function add(string, values, props) {
+      this.types += string;
+      this.values = this.values.concat(values);
+      this.props = this.props.concat(props);
     }
   }, {
     key: "_getDataFromArguments",
     value: function _getDataFromArguments(_ref) {
       var _ref2 = _slicedToArray(_ref, 3),
-          tokens = _ref2[0],
+          dictionary = _ref2[0],
           callback = _ref2[1],
           debug = _ref2[2];
 
-      if (tokens instanceof RegExp) {
-        tokens = [[callback, tokens]];
+      if (dictionary instanceof RegExp) {
+        dictionary = [[callback, dictionary]];
       } else {
-        tokens = tokens.map(function (_ref3) {
+        dictionary = dictionary.map(function (_ref3) {
           var _ref4 = _slicedToArray(_ref3, 2),
               a = _ref4[0],
               b = _ref4[1];
@@ -106,42 +108,52 @@ var FoldmakerObject = /*#__PURE__*/function () {
       } // Add this as the last token by default, this will prevent infinite loops
 
 
-      tokens.push([function () {
+      dictionary.push([function () {
         return undefined;
       }, /[\s\n\S]/]);
       return {
-        tokens: tokens,
+        dictionary: dictionary,
         debug: debug
       };
     }
   }, {
     key: "_replace",
-    value: function _replace(oldState, tokens, debug) {
+    value: function _replace(oldState, dictionary, debug) {
       var _this = this;
 
       var state = Foldmaker();
-      var string = oldState.string,
-          array = oldState.array;
+      var types = oldState.types,
+          values = oldState.values,
+          props = oldState.props;
 
-      this._tokenize(string, tokens, function (_ref5) {
+      this._tokenize(types, dictionary, function (_ref5) {
         var type = _ref5.type,
             map = _ref5.map,
             index = _ref5.index;
 
-        var occurrence = _this._getOccurrence(array, map, index);
+        var slicedProps = _this._getProps(props, map, index);
 
-        _this._manipulate(type, occurrence, state, oldState);
+        var occurrence = _this._getOccurrence(values, slicedProps, map, index);
+
+        _this._manipulate(type, occurrence, slicedProps, state, oldState);
       });
 
       if (debug) debug(state);
       return state;
     }
   }, {
+    key: "_getProps",
+    value: function _getProps(props, map, index) {
+      var count = map[0].length;
+      return props.slice(index, count + index);
+    }
+  }, {
     key: "_getOccurrence",
-    value: function _getOccurrence(array, map, index) {
+    value: function _getOccurrence(values, props, map, index) {
       var count = map[0].length;
       return {
-        raw: array.slice(index, count + index),
+        raw: values.slice(index, count + index),
+        props: props,
         index: index,
         count: count,
         map: map
@@ -149,14 +161,14 @@ var FoldmakerObject = /*#__PURE__*/function () {
     }
   }, {
     key: "_manipulate",
-    value: function _manipulate(type, occurrence, state, oldState) {
+    value: function _manipulate(type, occurrence, props, state, oldState) {
       var result = type(occurrence, state, oldState);
 
       if (result) {
-        if (Array.isArray(result)) state.add(result[0], [result[1]]);else state.add('1', [result]);
+        if (Array.isArray(result)) state.add(result[0], [result[1]], [props]);else state.add('1', [result]);
         state.modified = true;
       } else {
-        state.add(occurrence.map[0], occurrence.raw);
+        state.add(occurrence.map[0], occurrence.raw, props);
       }
     }
   }]);
@@ -224,8 +236,8 @@ var visitor = function visitor(a, b) {
 
 exports.visitor = visitor;
 
-var Foldmaker = function Foldmaker(tokens) {
-  return new FoldmakerObject(tokens);
+var Foldmaker = function Foldmaker(dictionary) {
+  return new FoldmakerObject(dictionary);
 };
 
 Foldmaker.FoldmakerObject = FoldmakerObject;

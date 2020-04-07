@@ -3,6 +3,7 @@ export class FoldmakerObject {
     let hasTokens = tokens && Array.isArray(tokens)
     this.types = hasTokens ? tokens.map((el) => el.type).join('') : ''
     this.values = hasTokens ? tokens.map((el) => el.value) : []
+    this.props = hasTokens ? tokens : []
     this.modified = false
     // These are here: easy extendability
     this.__proto__._tokenize = tokenize
@@ -28,9 +29,10 @@ export class FoldmakerObject {
     return this
   }
 
-  add(string, values) {
+  add(string, values, props) {
     this.types += string
     this.values = this.values.concat(values)
+    this.props = this.props.concat(props)
   }
   
   _getDataFromArguments([dictionary, callback, debug]) {
@@ -47,31 +49,37 @@ export class FoldmakerObject {
 
   _replace(oldState, dictionary, debug) {
     let state = Foldmaker()
-    let { types, values } = oldState
+    let { types, values, props } = oldState
     this._tokenize(types, dictionary, ({ type, map, index }) => {
-      const occurrence = this._getOccurrence(values, map, index)
-      this._manipulate(type, occurrence, state, oldState)
+      const slicedProps = this._getProps(props, map, index)
+      const occurrence = this._getOccurrence(values, slicedProps, map, index)
+      this._manipulate(type, occurrence, slicedProps, state, oldState)
     })
     if(debug) debug(state)
     return state
   }
+
+  _getProps (props, map, index) {
+    let count = map[0].length
+    return props.slice(index, count + index)
+  }
   
-  _getOccurrence (values, map, index) {
+  _getOccurrence (values, props, map, index) {
     let count = map[0].length
     return {
       raw: values.slice(index, count + index),
-      index, count, map
+      props, index, count, map
     }
   }
   
-  _manipulate (type, occurrence, state, oldState) {
+  _manipulate (type, occurrence, props, state, oldState) {
     const result = type(occurrence, state, oldState)
     if (result) {
-      if (Array.isArray(result)) state.add(result[0], [result[1]])
+      if (Array.isArray(result)) state.add(result[0], [result[1]], [props])
       else state.add('1', [result])
       state.modified = true
     } else {
-      state.add(occurrence.map[0], occurrence.raw)
+      state.add(occurrence.map[0], occurrence.raw, props)
     }
   }
 }
