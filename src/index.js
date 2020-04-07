@@ -1,8 +1,8 @@
 export class FoldmakerObject {
   constructor(tokens) {
     let hasTokens = tokens && Array.isArray(tokens)
-    this.types = hasTokens ? tokens.map((el) => el.type).join('') : ''
-    this.values = hasTokens ? tokens.map((el) => el.value) : []
+    this.types = hasTokens ? tokens.map(el => el.type).join('') : ''
+    this.values = hasTokens ? tokens.map(el => el.value) : []
     this.props = hasTokens ? tokens : []
     this.modified = false
     // These are here: easy extendability
@@ -34,7 +34,7 @@ export class FoldmakerObject {
     this.values = this.values.concat(values)
     this.props = this.props.concat(props)
   }
-  
+
   _getDataFromArguments([dictionary, callback, debug]) {
     if (dictionary instanceof RegExp) {
       dictionary = [[callback, dictionary]]
@@ -55,24 +55,27 @@ export class FoldmakerObject {
       const occurrence = this._getOccurrence(values, slicedProps, map, index)
       this._manipulate(type, occurrence, slicedProps, state, oldState)
     })
-    if(debug) debug(state)
+    if (debug) debug(state)
     return state
   }
 
-  _getProps (props, map, index) {
+  _getProps(props, map, index) {
     let count = map[0].length
     return props.slice(index, count + index)
   }
-  
-  _getOccurrence (values, props, map, index) {
+
+  _getOccurrence(values, props, map, index) {
     let count = map[0].length
     return {
       raw: values.slice(index, count + index),
-      props, index, count, map
+      props,
+      index,
+      count,
+      map,
     }
   }
-  
-  _manipulate (type, occurrence, props, state, oldState) {
+
+  _manipulate(type, occurrence, props, state, oldState) {
     const result = type(occurrence, state, oldState)
     if (result) {
       if (Array.isArray(result)) state.add(result[0], [result[1]], [props])
@@ -85,7 +88,8 @@ export class FoldmakerObject {
 }
 
 export const tokenize = (string, dictionary, callback) => {
-  let index = 0, tokens = []
+  let index = 0,
+    tokens = []
   // Add this as the last token by default, this will prevent infinite loops
   dictionary.push(['0', /[\s\n\S]/])
   while (string) {
@@ -107,17 +111,17 @@ export const tokenize = (string, dictionary, callback) => {
 }
 
 export const traverse = (node, callback) => {
-  let also = (subNode) => subNode && traverse(subNode, callback)
-  if (Array.isArray(node)) return node.map((item) => callback(item, also))
+  let also = subNode => subNode && traverse(subNode, callback)
+  if (Array.isArray(node)) return node.map(item => callback(item, also))
   else return callback(node, also)
 }
 
 export const visitor = (a, b) => [a, b]
 
-const Foldmaker = (dictionary) => new FoldmakerObject(dictionary)
+const Foldmaker = dictionary => new FoldmakerObject(dictionary)
 Foldmaker.FoldmakerObject = FoldmakerObject
-Foldmaker.traverse = traverse
 Foldmaker.tokenize = tokenize
+Foldmaker.traverse = traverse
 Foldmaker.visitor = visitor
 Foldmaker.fm = Foldmaker // shorthand, circular
 export default Foldmaker

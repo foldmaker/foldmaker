@@ -1,24 +1,24 @@
 # ![](logo.png)
 
-Foldmaker is a lightweight tool (120 lines uncommented), and **a way of thinking** for building general-purpose parsers. It was designed to be minimal and user-friendly. It has its own characteristic way of parsing. Design of Foldmaker is centered around a single idea that makes parsing easier:
+Foldmaker is a lightweight tool (~120 lines uncommented), and **a way of thinking** for building parsers. It was designed to be minimal and user-friendly. Foldmaker has its own characteristic parsing technique. This technique results in very compact parsers. You can implement a JSON parser only in [~45 lines](https://github.com/foldmaker/json-parse) or SCSS-like preprocessors only in [~50 lines](https://github.com/foldmaker/css-nested). 
 
-> **PARSING IS RE-TOKENIZATION**
+## "Parsing is re-tokenization"
 
-Now you know the truth. With the power of the truth, you can implement JSON.parse only in [~45 lines](https://github.com/foldmaker/json-parse) or SCSS-like preprocessors only in [~50 lines](https://github.com/foldmaker/css-nested). It's relieving that this truth can be explained with words. Not all the truths can be. Some truths are metaphors only. This one is not a metaphor. It's quite literal: Foldmaker uses its tokenizer function, also during parsing. The same function. We use it, first to tokenize our **string**, then to tokenize our **token stream**. Then we use it again, on the resulting token stream, and so on. Repeat after me:
-
-> To **parse()** is to **tokenize()**. and to recursively **parse()** is solely to **tokenize()** enough times.
-
-More on this is explained below.
+**This is Foldmaker's motto**, and its embodied in Foldmaker's architecture. The tokenizer function is also used as the parser function internally. First to tokenize our **string**, then to tokenize our **token stream**. Then we use it again, on the resulting token stream, and so on. More on this is explained below.
 
 ### Special versions
 
--  [@foldmaker/strict](https://github.com/foldmaker/foldmaker-strict) - Strict mode with error logging
--  [@foldmaker/capturing-groups](https://github.com/foldmaker/foldmaker-capturing-groups) - Offers capturing group  support
+-  [@foldmaker/tiny](https://github.com/foldmaker/foldmaker-tiny) - Strict mode with error logging
+-  [@foldmaker/strict](https://github.com/foldmaker/foldmaker-strict) - Strict mode with error logging (not done yet)
+-  [@foldmaker/capturing-groups](https://github.com/foldmaker/foldmaker-capturing-groups) - Offers capturing group  support (not done yet)
 
 ### Examples
--  [@foldmaker/json-parse](https://github.com/foldmaker/json-parse) - JSON.parse implementation. Does not check validity.
+-  [@foldmaker/json-parse](https://github.com/foldmaker/json-parse) - JSON.parse implementation. Does not check for validity.
 -  [@foldmaker/css-nested](https://github.com/foldmaker/css-nested) - Tiny plugin to unwrap nested CSS rules (like SCSS)
--  [@foldmaker/shallow-ast](https://github.com/foldmaker/shallow-ast) - Error tolerant AST generator for JS-like languages
+-  [@foldmaker/shallow-ast](https://github.com/foldmaker/shallow-ast) - Error tolerant AST generator for JS-like languages (not done yet)
+- [Nested arrays](https://github.com/foldmaker/foldmaker/blob/master/examples/nested-arrays.js)
+- [Basic linter](https://github.com/foldmaker/foldmaker/blob/master/examples/basic-linter.js)
+- [Line and column mapping](https://github.com/foldmaker/foldmaker/blob/master/examples/line-mapping.js) 
 
 ### Installation
 Foldmaker can be installed with [npm](https://docs.npmjs.com/getting-started/what-is-npm), by the following command:
@@ -32,9 +32,9 @@ import  Foldmaker  from  'foldmaker'
 
 ## How it works?
 
-In foldmaker, tokenization and parsing are analogous processes. Our tokenizer function is also used as the parser function under the hood. First our **string** gets tokenized by it, then our **token stream** gets tokenized. This is possible, because in Foldmaker, **token stream is a string!** This is possible thanks to the **first rule** of Foldmaker's specification:
+In Foldmaker, tokenization and parsing are analogous processes. Our tokenizer function is also used as the parser function under the hood. First our **string** gets tokenized by it, then our **token stream** gets tokenized. This is possible, because in Foldmaker, **token stream is a string!** This is possible thanks to the **first rule** of Foldmaker's specification:
 
-> 1. Always use one-character token names
+1. Always use one-character token names
 
 While this rule may seem to restrict the user, but it has its own advantages. Let me explain. Let's say, in the following string, we want to match the condition inside the if block. We want to identify `foo === 1` part as the "**condition**" .
 ```
@@ -96,8 +96,6 @@ console output will be:
 }
 ```
 
-> 2. Don't use '0' as a token name, it's reserved for unknown token type.
-> 3. Don't use '1' as a token name, it's reserved for unset parsed token type.
 **Input string:**
 ```js
 {"a": 1, "b": 2, "c": [1, 2, 3, {"deep": {}}]}
@@ -136,10 +134,11 @@ Iteration 7  : o
 | **add**      | `add(string, array)`                   | -                                |   |   |
 
 
+## Useful Links
 
-
-https://github.com/jashkenas/coffeescript/wiki/list-of-languages-that-compile-to-js#tools-for-compiler-writers
+- [Tools for Compiler Writers by @jashkenas](https://github.com/jashkenas/coffeescript/wiki/list-of-languages-that-compile-to-js#tools-for-compiler-writers)
 
   
 
-## LICENSE [MIT](LICENSE)
+## License 
+Licensed by the MIT License.
